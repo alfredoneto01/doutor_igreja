@@ -1,5 +1,9 @@
 # Plano de Design — Doutor Igreja (Fase 1.3)
 
+> **Superado (29/10/2026):** a identidade visual passou a ser a do site anterior da Cadu Aranha
+> (logo, carvão + dourado #fdc05d, botões azuis, Roboto), por decisão do cliente. Ver
+> `app/globals.css`. Este plano fica como registro da proposta da Fase 1.
+
 > Curto de propósito. Revisar contra o briefing (§4) e só então implementar a UI (Fase 1.4).
 > Decisão de marca já tomada: **A — Rebrand total**, nicho exclusivo de igreja.
 

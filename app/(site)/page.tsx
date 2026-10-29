@@ -1,5 +1,5 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { CoverageArcs } from '@/components/brand/coverage-arcs'
 import { Section } from '@/components/layout/section'
 import { LinkCards } from '@/components/content/link-cards'
 import { Pending } from '@/components/content/pending'
@@ -43,17 +43,31 @@ export default function HomePage() {
 
   return (
     <>
-      <section className="relative overflow-hidden">
-        <CoverageArcs className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[130%] w-full opacity-60" />
-        <div className="from-background via-background/70 pointer-events-none absolute inset-0 -z-10 bg-linear-to-b to-transparent" />
-        <div className="mx-auto max-w-4xl px-4 py-24 sm:py-32">
-          <p className="text-accent font-mono text-xs font-medium tracking-[0.2em] uppercase">
+      {/* Abertura no estilo do site anterior: grade de alto-falante + logo grande. */}
+      <section className="relative overflow-hidden bg-black bg-[url(/brand/grade-alto-falante.jpg)] bg-cover bg-center">
+        <div className="pointer-events-none absolute inset-0 bg-radial from-transparent via-black/30 to-black/80" />
+        <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 py-20 text-center sm:py-28">
+          <Image
+            src="/brand/cadu-aranha-logo.png"
+            alt="Cadu Aranha"
+            width={980}
+            height={343}
+            priority
+            className="h-auto w-full max-w-md drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] sm:max-w-xl"
+          />
+        </div>
+      </section>
+
+      {/* Texto em fundo liso, logo abaixo da grade — como no site anterior. */}
+      <section className="bg-[#333333]">
+        <div className="mx-auto flex max-w-4xl flex-col items-center px-4 py-16 text-center sm:py-20">
+          <p className="text-accent font-mono text-sm font-bold tracking-[0.2em] uppercase">
             Produção · Direção técnica · Estúdio · Igrejas
           </p>
-          <h1 className="text-foreground mt-5 text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-6xl">
+          <h1 className="text-foreground mt-4 text-3xl leading-tight font-bold text-balance sm:text-5xl">
             Audiovisual com direção, previsibilidade e propósito.
           </h1>
-          <p className="text-muted-foreground mt-6 max-w-2xl text-lg text-pretty">
+          <p className="text-muted-foreground mt-5 max-w-2xl text-lg text-pretty">
             {BRANDS.institucional.name}: {BRANDS.institucional.tagline.toLowerCase()} Uma estrutura
             que reúne a produtora, o Estúdio Teia e o Doutor Igreja — cada um com a sua jornada.
           </p>

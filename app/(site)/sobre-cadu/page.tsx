@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/page-header'
 import { Section } from '@/components/layout/section'
@@ -34,12 +35,24 @@ export default function SobreCaduPage() {
       />
 
       <Section kicker="Trajetória" title="Biografia profissional">
-        <BulletList items={HIGHLIGHTS} className="sm:grid-cols-1" />
-        <div className="mt-8">
-          <Pending>
-            biografia completa aprovada, fotos oficiais, lista de palestras e projetos (versões
-            curta/média/longa da central de imprensa).
-          </Pending>
+        <div className="grid items-start gap-10 md:grid-cols-[280px_1fr]">
+          {/* Foto usada no site anterior (caduaranha.com.br). */}
+          <Image
+            src="/brand/cadu-aranha.png"
+            alt="Cadu Aranha"
+            width={800}
+            height={800}
+            className="w-full max-w-[280px] rounded-md"
+          />
+          <div>
+            <BulletList items={HIGHLIGHTS} className="sm:grid-cols-1" />
+            <div className="mt-8">
+              <Pending>
+                biografia completa aprovada, lista de palestras e projetos (versões
+                curta/média/longa da central de imprensa).
+              </Pending>
+            </div>
+          </div>
         </div>
       </Section>
 
