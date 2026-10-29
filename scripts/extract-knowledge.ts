@@ -6,11 +6,12 @@
  * corpo em TEXTO LIMPO (sem JSX, sem formatação markdown). É essa saída que
  * entra no prompt do bot — nunca o arquivo bruto.
  *
- * Escopo do bot (§5): responde dúvida OPERACIONAL. Por isso a base cobre FAQ e
- * serviços. Dúvida técnica de áudio o bot NÃO responde — redireciona.
+ * Também exporta o catálogo comercial (lib/catalog.ts) — a fonte de verdade de
+ * preços e prazos que o agente consulta (contexto §10). Preço nunca vem do MDX.
  *
  * Saídas (em /generated, fora do git):
- *   - knowledge-base.json  → estruturado, para consumo programático
+ *   - knowledge-base.json  → FAQ estruturado, para consumo programático
+ *   - catalog.json         → catálogo comercial com vigência (para o n8n/agente)
  *   - bot-knowledge.md     → bloco estável pronto para o prefixo cacheável
  *
  * Rodar: pnpm extract
@@ -24,6 +25,7 @@ import remarkMdx from 'remark-mdx'
 import stripMarkdown from 'strip-markdown'
 import { visit } from 'unist-util-visit'
 import type { Root } from 'mdast'
+import * as catalog from '../lib/catalog'
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..')
 const CONTENT_DIR = join(ROOT, 'content')
@@ -77,12 +79,11 @@ function readMdxDir(dir: string): { file: string; data: Record<string, unknown>;
 }
 
 type Entry = {
-  type: 'faq' | 'service'
+  type: 'faq'
   slug: string
-  area: string
+  topic: string
   title: string
   text: string
-  priceRange?: string
 }
 
 async function build(): Promise<Entry[]> {
@@ -94,78 +95,83 @@ async function build(): Promise<Entry[]> {
     entries.push({
       type: 'faq',
       slug: String(data.slug ?? ''),
-      area: String(data.area ?? 'geral'),
+      topic: String(data.topic ?? 'geral'),
       title: String(data.question ?? ''),
       text: await mdxToPlainText(body),
-    })
-  }
-
-  // Serviços — descrição operacional, público, entregável e faixa (§4/§5).
-  for (const { data, body } of readMdxDir('servicos')) {
-    const parts = [
-      String(data.summary ?? ''),
-      data.audience ? `Para quem: ${data.audience}` : '',
-      data.deliverable ? `Entregável: ${data.deliverable}` : '',
-      await mdxToPlainText(body),
-    ].filter(Boolean)
-    entries.push({
-      type: 'service',
-      slug: String(data.slug ?? ''),
-      area: String(data.area ?? 'geral'),
-      title: String(data.title ?? ''),
-      text: parts.join('\n'),
-      priceRange: data.priceRange ? String(data.priceRange) : undefined,
     })
   }
 
   return entries
 }
 
-function toPromptMarkdown(entries: Entry[]): string {
-  const faqs = entries.filter((e) => e.type === 'faq')
-  const services = entries.filter((e) => e.type === 'service')
+/** Catálogo com os preços já resolvidos para hoje — o agente nunca escolhe vigência sozinho. */
+function catalogSnapshot(on = new Date()) {
+  return {
+    generatedAt: on.toISOString(),
+    brands: catalog.BRANDS,
+    checkups: catalog.CHECKUPS.map((c) => ({
+      ...c,
+      currentPrice: catalog.currentPrice(c.prices, on) ?? null,
+    })),
+    estudioTeia: catalog.ESTUDIO_SERVICES.map((s) => ({
+      ...s,
+      currentPrice: catalog.currentPrice(s.prices, on) ?? null,
+    })),
+    estudioPolicies: catalog.ESTUDIO_POLICIES,
+    workshops: catalog.WORKSHOPS,
+    projectStages: catalog.PROJECT_STAGES,
+    solutions: catalog.SOLUTIONS,
+  }
+}
+
+function toPromptMarkdown(entries: Entry[], snap: ReturnType<typeof catalogSnapshot>): string {
   const lines: string[] = []
 
-  lines.push('# Base de conhecimento — Doutor Igreja')
+  lines.push('# Base de conhecimento — Ecossistema Cadu Aranha')
   lines.push('')
   lines.push(
-    'Bloco estável para o prefixo cacheável do prompt (§6). Gerado por ' +
-      '`pnpm extract` a partir do MDX do site — não editar à mão.',
+    'Bloco estável para o prefixo cacheável do prompt. Gerado por `pnpm extract` ' +
+      'a partir do MDX do site e de lib/catalog.ts — não editar à mão.',
   )
   lines.push('')
-  lines.push('## Perguntas frequentes (operacional)')
+  // Sem data aqui: este bloco é o prefixo cacheado e não pode mudar a cada geração.
+  lines.push('## Check-Up Doutor Igreja — modalidades vigentes')
   lines.push('')
-  for (const f of faqs) {
+  for (const c of snap.checkups) {
+    const price = c.currentPrice
+      ? catalog.formatPrice(c.currentPrice)
+      : 'sem preço vigente — encaminhar à equipe'
+    lines.push(`### ${c.name}`)
+    lines.push(`Escopo: ${c.scope} Duração: ${c.duration}. Participantes: ${c.participants}.`)
+    lines.push(`Relatório: ${c.reportDeadline}. Investimento: ${price}.`)
+    lines.push(`Quando recomendar: ${c.whenToChoose}`)
+    lines.push('')
+  }
+  lines.push('## Perguntas frequentes')
+  lines.push('')
+  for (const f of entries) {
     lines.push(`### ${f.title}`)
     lines.push(f.text)
     lines.push('')
   }
-  lines.push('## Serviços')
-  lines.push('')
-  for (const s of services) {
-    lines.push(`### ${s.title}`)
-    if (s.priceRange) lines.push(`Faixa de investimento: ${s.priceRange}`)
-    lines.push(s.text)
-    lines.push('')
-  }
-  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n'
+  return (
+    lines
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim() + '\n'
+  )
 }
 
 async function main() {
   const entries = await build()
+  const snap = catalogSnapshot()
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true })
 
   writeFileSync(join(OUT_DIR, 'knowledge-base.json'), JSON.stringify(entries, null, 2) + '\n')
-  writeFileSync(join(OUT_DIR, 'bot-knowledge.md'), toPromptMarkdown(entries))
+  writeFileSync(join(OUT_DIR, 'catalog.json'), JSON.stringify(snap, null, 2) + '\n')
+  writeFileSync(join(OUT_DIR, 'bot-knowledge.md'), toPromptMarkdown(entries, snap))
 
-  const counts = entries.reduce<Record<string, number>>((acc, e) => {
-    acc[e.type] = (acc[e.type] ?? 0) + 1
-    return acc
-  }, {})
-  console.log(
-    `[extract] ${entries.length} itens → generated/ ` +
-      `(faq: ${counts.faq ?? 0}, service: ${counts.service ?? 0})`,
-  )
+  console.log(`[extract] ${entries.length} FAQ + ${snap.checkups.length} Check-Ups → generated/`)
 }
 
 main().catch((err) => {

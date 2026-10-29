@@ -3,7 +3,7 @@ import { Source_Serif_4, Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { ThemeProvider } from '@/components/theme/theme-provider'
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from '@/lib/site'
+import { ALLOW_INDEXING, SITE_URL, SITE_NAME, SITE_SHORT_NAME, SITE_DESCRIPTION } from '@/lib/site'
 
 const serif = Source_Serif_4({
   variable: '--font-serif',
@@ -26,20 +26,20 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Som e transmissão ao vivo para igrejas`,
-    template: `%s — ${SITE_NAME}`,
+    default: SITE_NAME,
+    template: `%s — ${SITE_SHORT_NAME}`,
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   authors: [{ name: 'Cadu Aranha' }],
-  creator: 'Cadu Aranha',
+  creator: 'Cadu Aranha Produções',
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
     url: SITE_URL,
     siteName: SITE_NAME,
   },
-  robots: { index: true, follow: true },
+  robots: { index: ALLOW_INDEXING, follow: ALLOW_INDEXING },
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

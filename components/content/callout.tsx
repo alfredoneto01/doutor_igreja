@@ -12,7 +12,11 @@ const CONFIG: Record<CalloutType, { icon: LucideIcon; label: string; classes: st
     classes: 'border-accent/50 bg-accent/10 text-foreground',
   },
   tip: { icon: Lightbulb, label: 'Dica', classes: 'border-accent/50 bg-accent/10 text-foreground' },
-  note: { icon: BookOpen, label: 'Observação', classes: 'border-border bg-muted/40 text-foreground' },
+  note: {
+    icon: BookOpen,
+    label: 'Observação',
+    classes: 'border-border bg-muted/40 text-foreground',
+  },
 }
 
 export function Callout({

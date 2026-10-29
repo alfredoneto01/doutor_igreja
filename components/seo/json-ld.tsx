@@ -1,31 +1,29 @@
+import { BRANDS } from '@/lib/catalog'
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, WHATSAPP_NUMBER } from '@/lib/site'
 
 /**
- * Dados estruturados de negócio local de serviço. Busca pela marca é pequena
- * (§2), então schema de serviço/área atendida ajuda mais que schema de marca.
+ * Dados estruturados da organização institucional, com Doutor Igreja e Estúdio
+ * Teia como marcas do ecossistema (contexto §2).
  */
 export function JsonLd() {
   const data = {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    '@id': `${SITE_URL}/#business`,
+    '@type': 'Organization',
+    '@id': `${SITE_URL}/#organization`,
     name: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     telephone: `+${WHATSAPP_NUMBER}`,
     areaServed: 'BR',
-    knowsAbout: [
-      'Sonorização de igreja',
-      'Transmissão ao vivo de culto',
-      'Projeto de áudio',
-      'Treinamento de equipe de som',
-    ],
     founder: { '@type': 'Person', name: 'Cadu Aranha' },
+    brand: [BRANDS.doutorIgreja, BRANDS.estudioTeia].map((b) => ({
+      '@type': 'Brand',
+      name: b.name,
+      description: b.tagline,
+      url: `${SITE_URL}${b.href}`,
+    })),
   }
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
   )
 }

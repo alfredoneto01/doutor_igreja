@@ -10,7 +10,7 @@ export function FaqAccordion({ items }: { items: Faq[] }) {
   return (
     <div className="divide-border border-border divide-y overflow-hidden rounded-xl border">
       {items.map((f) => (
-        <details key={f.slug} id={f.slug} className="group bg-card scroll-mt-24 open:bg-muted/30">
+        <details key={f.slug} id={f.slug} className="group bg-card open:bg-muted/30 scroll-mt-24">
           <summary className="hover:text-accent flex cursor-pointer items-center justify-between gap-4 p-5 font-medium marker:content-none [&::-webkit-details-marker]:hidden">
             <span className="text-pretty">{f.question}</span>
             <Plus className="text-accent size-5 shrink-0 transition-transform group-open:rotate-45" />

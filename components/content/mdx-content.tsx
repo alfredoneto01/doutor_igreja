@@ -20,13 +20,7 @@ const sharedComponents: MDXComponentsMap = {
   Callout: Callout as unknown as ComponentType<Record<string, unknown>>,
 }
 
-export function MDXContent({
-  code,
-  components,
-}: {
-  code: string
-  components?: MDXComponentsMap
-}) {
+export function MDXContent({ code, components }: { code: string; components?: MDXComponentsMap }) {
   const Component = getMDXComponent(code)
   return (
     // eslint-disable-next-line react-hooks/static-components -- Velite emite um componente por corpo MDX; cacheado acima, referência estável entre renders.

@@ -1,18 +1,22 @@
-# Doutor Igreja
+# Ecossistema Cadu Aranha — site
 
-Site institucional + base para o agente de WhatsApp do Cadu Aranha — som,
-transmissão ao vivo e projeto de áudio para igrejas. Marca única "Doutor Igreja"
-(decisão A da especificação).
+Site institucional da **Cadu Aranha Produções Audiovisuais**, com as frentes
+**Doutor Igreja** (igrejas) e **Estúdio Teia** (estúdio e eventos), e base para o
+agente de atendimento Webinho.
 
-Um único projeto Next.js serve o site, o backend do bot (Fase 2) e o painel
-(Fase 3). Esta entrega cobre a **Fase 1 — Site institucional**.
+- Contexto completo do projeto: [`docs/contexto-ecossistema-cadu-aranha.md`](docs/contexto-ecossistema-cadu-aranha.md)
+- Plano de implementação: [`plano-implementacao.md`](plano-implementacao.md)
+- `doutor-igreja-spec.md` e `plano-execucao.md` são da fase anterior (marca única) e
+  estão superados onde conflitam com o contexto.
+
+Estado atual: MVP do site (contexto §41), como portal único em homologação (§40).
 
 ## Stack
 
 - **Next.js 16** (App Router) + **TypeScript** + **Tailwind 4**
-- **Velite** — conteúdo em MDX no repositório, sem CMS
-- **Extrator** — MDX cru → texto limpo para o prompt do bot (`pnpm extract`)
-- Hospedagem alvo: **Railway** (processo Node persistente para o `node-cron` da Fase 2)
+- **Velite** — conteúdo editorial em MDX no repositório
+- **Catálogo** (`lib/catalog.ts`) — produtos, preços com vigência e prazos; nunca em MDX
+- **Extrator** — FAQ + catálogo → `generated/` para o prompt do agente (`pnpm extract`)
 
 ## Comandos
 
@@ -20,59 +24,64 @@ Um único projeto Next.js serve o site, o backend do bot (Fase 2) e o painel
 pnpm dev        # Velite + Next dev
 pnpm build      # Velite + build de produção
 pnpm start      # servidor de produção
-pnpm extract    # gera generated/bot-knowledge.md a partir do MDX (para o bot)
-pnpm typecheck  # tsc --noEmit
+pnpm extract    # gera generated/ (bot-knowledge.md, knowledge-base.json, catalog.json)
+pnpm typecheck  # tsc --noEmit (rodar depois de `pnpm exec velite`)
 pnpm lint       # eslint
 ```
+
+Requer pnpm 11+ (builds permitidos em `pnpm-workspace.yaml`).
 
 ## Estrutura
 
 ```
-app/(site)/       Páginas do site (home + serviços, diagnóstico, faq, curso, privacidade)
+app/(site)/
+  /                          Home institucional (três portas de entrada)
+  sobre-cadu/  solucoes/[slug]/  podcast/  cursos-e-treinamentos/  imprensa/  contato/
+  doutor-igreja/             Área Doutor Igreja
+    check-up/                Página central + [modalidade] (4) + qual-escolher
+    projetos/  workshops/  conteudos/[slug]/
+  estudio-teia/              Gravações, estrutura, condições e eventos externos
+  politica-de-privacidade/
 components/
-  sections/       Seções da home (hero, diagnóstico, serviços, prova, curso, conteúdo, faq, contato)
-  content/        Renderizador MDX, Callout, acordeão de FAQ
-  brand/          Assinatura visual (curvas de cobertura acústica)
-  layout/         Header, footer, Section, PageHeader
-content/          MDX: faq, servicos, diagnostico (SEO), casos, episodios
+  checkup/                   Tabela e cartões do Check-Up (preços do catálogo)
+  content/                   CTA de WhatsApp, cartões, FAQ, MDX, <Pending>
+  layout/  brand/  seo/  sections/
+content/                     MDX: faq (por tópico), diagnostico, casos, episodios
 lib/
-  site.ts         Fonte única: domínio, número de WhatsApp, helper de CTA
-  content.ts      Acessores das coleções Velite
-  redirects.ts    Mapa de 301 do rebrand (preencher na Fase 0.6)
+  catalog.ts                 Fonte única de produtos, preços (com vigência) e prazos
+  site.ts                    Domínio, WhatsApp, mensagens por contexto, indexação
+  nav.ts                     Navegação principal
+  redirects.ts               301 das rotas antigas + mapa do site antigo
 scripts/
-  extract-knowledge.ts   Extrator para o prompt do bot (Fase 1.2)
+  extract-knowledge.ts       FAQ + catálogo → generated/
 ```
+
+Conteúdo ainda não entregue ou não aprovado aparece na página como
+"Conteúdo pendente" (componente `<Pending>`). Buscar por `<Pending` lista tudo o que falta.
 
 ## Configuração
 
 Copie `.env.example` para `.env.local`:
 
-- `NEXT_PUBLIC_SITE_URL` — URL base (canônicas, OG, sitemap, robots)
-- `NEXT_PUBLIC_WHATSAPP_NUMBER` — E.164 só dígitos. **Na Fase 1 aponta para o
-  número de teste**; migra para o real só na Fase 3.
+- `NEXT_PUBLIC_SITE_URL` — URL base (canônicas, OG, sitemap, robots). Domínio definitivo pendente.
+- `NEXT_PUBLIC_WHATSAPP_NUMBER` — E.164 só dígitos. Em homologação, o número de teste.
+- `NEXT_PUBLIC_ALLOW_INDEXING` — vazio em homologação (robots `noindex`, sitemap vazio);
+  `true` só em produção.
 
-## Conteúdo
+## Regras de conteúdo (contexto §3, §14, §40)
 
-Todo o conteúdo atual é **placeholder marcado** — será substituído pelo
-levantamento real com o Cadu (§12 da spec): FAQs do histórico de WhatsApp/Instagram,
-faixas de preço, região de atendimento, casos com fotos, ementa do curso.
-
-O mesmo MDX alimenta o site (via Velite) e o prompt do bot (via `pnpm extract`,
-que remove JSX e formatação e emite texto limpo em `generated/`).
+- Check-Up: só as quatro modalidades vigentes; nada de Lite, Full, 360, Direcionado,
+  Integrado ou Visita Técnica como nome comercial, nem "consultoria" como nome do Check-Up.
+- Preço só aparece se estiver vigente na data (`currentPrice`). Reajustes de 2027 ficam
+  cadastrados sem `validFrom` até aprovação.
+- Valores do Estúdio Teia só vão ao site com `SHOW_ESTUDIO_PRICES = true` (aprovação do Cadu).
+- Cursos online não são vendidos: aparecem como "em desenvolvimento".
+- Portfólio e depoimentos só com `authorized: true`.
 
 ## Deploy (Railway)
 
 1. Novo projeto a partir deste repo; Railway detecta Next.js.
 2. Build: `pnpm build` · Start: `pnpm start`.
-3. Postgres gerenciado ao lado (já usado a partir da Fase 2).
-4. Variáveis de ambiente conforme `.env.example`.
-5. Domínio `doutorigreja.com.br`. Apontar `caduaranha.com.br` para este app e
-   preencher `lib/redirects.ts` com o mapa 301 (Fase 0.6) antes de derrubar o site atual.
-
-## Pendências antes do launch
-
-- Conteúdo real (§12) no lugar dos placeholders
-- Número de teste do WhatsApp nos CTAs
-- Mapa de 301 de `caduaranha.com.br` (Fase 0.6)
-- Revisão jurídica da política de privacidade
-- Fontes: hoje via `next/font` (Source Serif 4 / Inter / JetBrains Mono)
+3. Variáveis de ambiente conforme `.env.example`.
+4. Antes de substituir o site atual de `caduaranha.com.br`, preencher `legacyRedirects`
+   em `lib/redirects.ts` com o mapa das URLs atuais.

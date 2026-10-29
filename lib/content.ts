@@ -1,48 +1,37 @@
 import {
   faq,
-  service,
   symptom,
   proof,
   episode,
   type Faq,
-  type Service,
   type Symptom,
   type Proof,
   type Episode,
 } from '#site/content'
 
-export type { Faq, Service, Symptom, Proof, Episode }
+export type { Faq, Symptom, Proof, Episode }
 
-export const AREAS = ['sonorizacao', 'transmissao', 'projeto', 'treinamento', 'geral'] as const
-export type Area = (typeof AREAS)[number]
+export type FaqTopic = Faq['topic']
 
-export const AREA_LABEL: Record<Area, string> = {
+export const AREA_LABEL: Record<Symptom['area'], string> = {
   sonorizacao: 'Sonorização',
   transmissao: 'Transmissão ao vivo',
-  projeto: 'Projeto e instalação',
-  treinamento: 'Treinamento de equipe',
+  projeto: 'Projeto e implantação',
+  treinamento: 'Equipes e capacitação',
   geral: 'Geral',
 }
 
-// `order` crescente primeiro (mais fundamental/importante); sem valor vai ao fim.
+// `order` crescente primeiro; sem valor vai ao fim.
 const byOrder = <T extends { order?: number }>(a: T, b: T) =>
   (a.order ?? Number.POSITIVE_INFINITY) - (b.order ?? Number.POSITIVE_INFINITY)
 
-export function getFaq(): Faq[] {
-  return [...faq].sort(byOrder)
+export function getFaq(topic?: FaqTopic): Faq[] {
+  return faq.filter((f) => !topic || f.topic === topic).sort(byOrder)
 }
 
-/** FAQ que entra no prompt do bot (§4). Filtrado por `botIncluded`. */
+/** FAQ que entra no prompt do agente. Filtrado por `botIncluded`. */
 export function getBotFaq(): Faq[] {
   return getFaq().filter((f) => f.botIncluded)
-}
-
-export function getServices(): Service[] {
-  return [...service].sort(byOrder)
-}
-
-export function getServiceBySlug(slug: string): Service | undefined {
-  return service.find((s) => s.slug === slug)
 }
 
 export function getSymptoms(): Symptom[] {
@@ -53,8 +42,9 @@ export function getSymptomBySlug(slug: string): Symptom | undefined {
   return symptom.find((s) => s.slug === slug)
 }
 
-export function getProof(): Proof[] {
-  return [...proof].sort(byOrder)
+/** Só casos com autorização de uso aparecem no site (§14). */
+export function getProof(brand?: Proof['brand']): Proof[] {
+  return proof.filter((p) => p.authorized && (!brand || p.brand === brand)).sort(byOrder)
 }
 
 export function getEpisodes(): Episode[] {
